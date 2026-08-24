@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f8f1e7" />
+<title>TaraLoom – Tailor Order Manager</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="phone-shell">
+  <header class="top-bar">
+    <button class="brand" type="button" onclick="showScreen('dashboard')" aria-label="TaraLoom home">
+      <span class="brand-mark">🧵</span><span>TaraLoom</span>
+    </button>
+    <span id="screenTitle" class="screen-title">Home</span>
+  </header>
+
+  <main>
+    <section id="dashboard" class="screen active">
+      <div class="welcome-card">
+        <div><p class="kicker" id="businessGreeting">Today</p><h1>What needs attention?</h1></div>
+        <div class="date-badge" id="todayLabel"></div>
+      </div>
+      <button class="today-work-card" type="button" onclick="openTodayOrders()">
+        <span class="today-work-icon">📌</span>
+        <span class="today-work-copy"><small>Orders to do today</small><b id="statToday">0</b><em>Tap to see today's deliveries</em></span>
+        <span class="today-work-arrow">›</span>
+      </button>
+      <div class="simple-stats">
+        <button class="summary-card" onclick="openCurrentFilter('in process')"><span class="summary-icon">🪡</span><b id="statInProcess">0</b><small>In Process</small></button>
+        <button class="summary-card" onclick="openCurrentFilter('ready')"><span class="summary-icon">✓</span><b id="statReady">0</b><small>Ready</small></button>
+        <button class="summary-card" onclick="openHistoryTab()"><span class="summary-icon">▣</span><b id="statCompleted">0</b><small>History</small></button>
+      </div>
+      <div class="section-head"><div><p class="kicker">Delivery</p><h2>Due today</h2></div><button class="text-btn" onclick="showScreen('orders')">See all</button></div>
+      <div id="todayList" class="list"></div>
+      <div class="section-head"><div><p class="kicker">Recent</p><h2>Latest activity</h2></div></div>
+      <div id="recentList" class="list"></div>
+    </section>
+
+    <section id="orders" class="screen">
+      <div class="page-head"><div><p class="kicker">Your work</p><h1>Orders</h1></div><button class="soft-btn" onclick="showScreen('customers')">👥 Customers</button></div>
+      <div class="big-tabs">
+        <button id="currentTab" class="active" onclick="setOrderMode('current')">Current</button>
+        <button id="historyTab" onclick="setOrderMode('history')">History</button>
+      </div>
+      <div class="search-wrap"><span>🔎</span><input id="searchInput" placeholder="Search name, phone or dress" oninput="renderOrders()" /></div>
+      <div id="currentFilters" class="filter-row">
+        <button class="chip active" onclick="setFilter('all', this)">All</button>
+        <button class="chip" onclick="setFilter('in process', this)">In Process</button>
+        <button class="chip" onclick="setFilter('ready', this)">Ready</button>
+      </div>
+      <p id="historyHelp" class="helper hidden">Completed orders stay here with customer, measurements, payment and photos.</p>
+      <div id="ordersList" class="list"></div>
+    </section>
+
+    <section id="customers" class="screen">
+      <div class="page-head"><div><p class="kicker">Saved customer details</p><h1>Customers</h1></div><button class="soft-btn" onclick="showScreen('orders')">← Orders</button></div>
+      <div class="search-wrap"><span>🔎</span><input id="customerSearch" placeholder="Search name or phone" oninput="renderCustomers()" /></div>
+      <p class="helper">Old orders remain searchable even after completion.</p>
+      <div id="customerList" class="list"></div>
+    </section>
+
+    <section id="add" class="screen">
+      <form id="orderForm" class="form-card">
+        <input type="hidden" id="editingId" />
+        <div class="page-head form-title-row"><div><h1 id="formHeading">Add Order</h1></div><button type="button" class="soft-btn" onclick="resetForm()">Clear</button></div>
+
+        <div class="form-section">
+          <h2>Customer</h2>
+          <label>Customer name<input id="customerName" required autocomplete="name" placeholder="e.g. Anita" /></label>
+          <label>Phone number<input id="phone" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" title="Enter a 10-digit mobile number starting with 6, 7, 8 or 9" placeholder="10-digit mobile number" oninput="sanitizeIndianPhone(this)" /></label>
+        </div>
+
+        <div class="form-section">
+          <h2>Order</h2>
+          <label>Dress / garment<select id="garment" required><option value="">Select</option><option>Blouse</option><option>Kurti</option><option>Lehenga</option><option>Gown</option><option>Shirt</option><option>Pants</option><option>Salwar Suit</option><option>Dress</option><option>Alteration</option><option>Other</option></select></label>
+          <div class="garment-photo-block">
+            <div class="section-line"><div><b>Garment photo</b><p class="helper no-margin">Take a photo of the garment received.</p></div></div>
+            <div class="garment-photo-actions">
+              <label class="media-btn">🖼️ Gallery<input type="file" id="garmentGalleryInput" accept="image/*" hidden /></label>
+              <label class="media-btn">📷 Camera<input type="file" id="garmentCameraInput" accept="image/*" capture="environment" hidden /></label>
+            </div>
+            <div id="garmentPhotoPreview" class="garment-photo-preview hidden"></div>
+          </div>
+          <div class="two"><label>Order date<input type="date" id="orderDate" required /></label><label>Delivery date<input type="date" id="deliveryDate" required /></label></div>
+          <label>Status<select id="stage" required><option>In Process</option><option>Ready</option></select></label>
+          <label>Notes<textarea id="notes" rows="3" placeholder="Colour, fitting, design changes..."></textarea></label>
+        </div>
+
+        <div class="form-section">
+          <div class="section-line"><div><h2>Measurements</h2><p class="helper no-margin">Add only what you need.</p></div></div>
+          <div class="measurement-grid measurement-icon-grid">
+            <label class="measurement-field"><img src="assets/measurements/bust.png" alt="Bust icon"><span>Bust / Chest</span><input id="bust" placeholder="e.g. 36 in" /></label>
+            <label class="measurement-field"><img src="assets/measurements/waist.png" alt="Waist icon"><span>Waist</span><input id="waist" placeholder="e.g. 30 in" /></label>
+            <label class="measurement-field"><img src="assets/measurements/hip.png" alt="Hip icon"><span>Hip</span><input id="hip" placeholder="e.g. 38 in" /></label>
+            <label class="measurement-field"><img src="assets/measurements/shoulder.png" alt="Shoulder icon"><span>Shoulder</span><input id="shoulder" placeholder="e.g. 14 in" /></label>
+            <label class="measurement-field"><img src="assets/measurements/sleeve.png" alt="Sleeve icon"><span>Sleeve</span><input id="sleeve" placeholder="e.g. 10 in" /></label>
+            <label class="measurement-field"><img src="assets/measurements/length.png" alt="Length icon"><span>Length</span><input id="length" placeholder="e.g. 40 in" /></label>
+          </div>
+          <textarea id="mnotes" rows="2" placeholder="Other measurement notes"></textarea>
+        </div>
+
+        <div class="form-section">
+          <div class="section-line"><div><h2>Reference</h2><p class="helper no-margin">Photo, camera or sketch.</p></div></div>
+          <div class="reference-actions">
+            <label class="media-btn">🖼️ Gallery<input type="file" id="galleryInput" accept="image/*" multiple hidden /></label>
+            <label class="media-btn">📷 Camera<input type="file" id="cameraInput" accept="image/*" capture="environment" hidden /></label>
+            <button type="button" class="media-btn" onclick="openDraw('form')">✏️ Sketch</button>
+          </div>
+          <div id="referencePreview" class="image-strip"></div>
+          <div id="formSketchWrap" class="sketch-preview-wrap hidden"><span>Saved sketch</span><img id="formSketchPreview" class="sketch-img tappable-image" alt="Order sketch" onclick="openImageViewer(this.src,'Sketch')" /></div>
+        </div>
+
+        <div class="form-section">
+          <h2>Payment</h2>
+          <div class="two"><label>Total amount (₹)<input id="totalAmount" type="number" min="0" step="1" inputmode="decimal" placeholder="0" oninput="updateBalancePreview()" /></label><label>Advance paid (₹)<input id="advancePaid" type="number" min="0" step="1" inputmode="decimal" placeholder="0" oninput="updateBalancePreview()" /></label></div>
+          <div class="balance-box"><span>Balance</span><b id="balancePreview">₹0</b></div>
+        </div>
+
+        <button class="primary large-submit" type="submit" id="submitBtn">Save Order</button>
+      </form>
+    </section>
+
+    <section id="details" class="screen"><div id="detailsContent"></div></section>
+
+    <section id="catalog" class="screen">
+      <div class="page-head"><div><p class="kicker">Style ideas</p><h1>Catalog</h1></div><label class="soft-btn file-label">＋ Add style<input id="catalogInput" type="file" accept="image/*" multiple hidden /></label></div>
+      <div class="search-wrap"><span>🔎</span><input id="catalogSearch" placeholder="Search blouse, neck, sleeve..." oninput="renderCatalog()" /></div>
+      <div class="filter-row" id="catalogFilters">
+        <button class="chip active" onclick="setCatalogFilter('all',this)">All</button><button class="chip" onclick="setCatalogFilter('blouse',this)">Blouse</button><button class="chip" onclick="setCatalogFilter('kurti',this)">Kurti</button><button class="chip" onclick="setCatalogFilter('lehenga',this)">Lehenga</button><button class="chip" onclick="setCatalogFilter('gown',this)">Gown</button><button class="chip" onclick="setCatalogFilter('neck',this)">Neck</button><button class="chip" onclick="setCatalogFilter('sleeve',this)">Sleeves</button>
+      </div>
+      <div id="catalogGrid" class="pin-grid"></div>
+    </section>
+
+    <section id="profile" class="screen">
+      <div class="profile-page-head"><h1>Profile</h1></div>
+
+      <div id="savedProfileCard" class="profile-hero"></div>
+      <button id="profileEditButton" class="profile-edit-button" type="button" onclick="toggleProfileEdit()">✎ Edit profile</button>
+
+      <form id="profileForm" class="form-card profile-edit-panel hidden">
+        <div class="profile-edit-head">
+          <div><p class="kicker">Account</p><h2>Edit profile</h2></div>
+          <button type="button" class="profile-close-edit" onclick="toggleProfileEdit(false)" aria-label="Close edit profile">×</button>
+        </div>
+        <label>Business / brand name<input id="profileBusiness" placeholder="Your shop name" /></label>
+        <label>Your name<input id="profileName" placeholder="Owner name" /></label>
+        <label>Phone number<input id="profilePhone" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" title="Enter a 10-digit mobile number starting with 6, 7, 8 or 9" placeholder="10-digit business phone" oninput="sanitizeIndianPhone(this)" /></label>
+        <label>Language<select id="profileLanguage" onchange="changeProfileLanguage(this.value)"><option value="English">English</option><option value="Telugu">Telugu</option><option value="Hindi">Hindi</option></select></label>
+        <label>Shop details<textarea id="profileDetails" rows="3" placeholder="Area, address or a short note"></textarea></label>
+        <button class="primary profile-save-button" type="submit">Save changes</button>
+      </form>
+
+      <div class="profile-section-title">Your account</div>
+      <div class="profile-list-card">
+        <button class="profile-row" type="button" onclick="toggleProfileEdit(true)">
+          <span class="profile-row-icon">🏪</span><div><b>Business details</b><small id="profileBusinessSummary">Add your shop information</small></div><i>›</i>
+        </button>
+        <button class="profile-row" type="button" onclick="toggleProfileEdit(true)">
+          <span class="profile-row-icon">🌐</span><div><b>Language</b><small id="profileLanguageSummary">English</small></div><i>›</i>
+        </button>
+        <button class="profile-row" type="button" onclick="showScreen('customers')">
+          <span class="profile-row-icon">👥</span><div><b>Customers</b><small>Open saved customer history</small></div><i>›</i>
+        </button>
+      </div>
+
+      <div class="profile-section-title">Shop management</div>
+      <div class="profile-list-card">
+        <button class="profile-row" type="button" onclick="toggleProfileManager('stockManager')">
+          <span class="profile-row-icon">📦</span><div><b>Stock requirements</b><small id="stockSummary">Keep track of materials to buy</small></div><i>›</i>
+        </button>
+        <button class="profile-row" type="button" onclick="toggleProfileManager('connectionManager')">
+          <span class="profile-row-icon">🤝</span><div><b>Connections</b><small id="connectionSummary">Coworkers, artists and partner contacts</small></div><i>›</i>
+        </button>
+      </div>
+
+      <div id="stockManager" class="profile-manager hidden">
+        <div class="manager-head"><div><p class="kicker">Stock</p><h2>Shop requirements</h2></div><button type="button" onclick="toggleProfileManager('stockManager',false)">×</button></div>
+        <p class="helper">Note what the shop needs so nothing is forgotten.</p>
+        <form id="stockForm" class="mini-manager-form">
+          <input type="hidden" id="stockEditingId">
+          <label>Item / requirement<input id="stockItem" required placeholder="e.g. Black thread, hooks, lining" /></label>
+          <label>Quantity<input id="stockQty" placeholder="e.g. 5 rolls / 20 pcs" /></label>
+          <label>Notes<textarea id="stockNotes" rows="2" placeholder="Brand, colour, supplier or reminder"></textarea></label>
+          <button class="primary" type="submit" id="stockSaveBtn">Add requirement</button>
+        </form>
+        <div id="stockList" class="manager-list"></div>
+      </div>
+
+      <div id="connectionManager" class="profile-manager hidden">
+        <div class="manager-head"><div><p class="kicker">Network</p><h2>Connections</h2></div><button type="button" onclick="toggleProfileManager('connectionManager',false)">×</button></div>
+        <p class="helper">Save coworkers and specialist partners you regularly work with.</p>
+        <form id="connectionForm" class="mini-manager-form">
+          <input type="hidden" id="connectionEditingId">
+          <label>Name<input id="connectionName" required placeholder="Person / artist name" /></label>
+          <label>Profession<select id="connectionProfession"><option>Coworker</option><option>Business Partner</option><option>Maggam Worker</option><option>Hand Paint Artist</option><option>Handloom Artist</option><option>Crochet Artist</option><option>Embroidery Artist</option><option>Other</option></select></label>
+          <label>Shop / brand name<input id="connectionShop" placeholder="Optional" /></label>
+          <label>Contact number<input id="connectionPhone" inputmode="numeric" maxlength="10" pattern="[6-9][0-9]{9}" title="Enter a 10-digit mobile number starting with 6, 7, 8 or 9" placeholder="10-digit mobile number" oninput="sanitizeIndianPhone(this)" /></label>
+          <label>Address<textarea id="connectionAddress" rows="2" placeholder="Shop or work address"></textarea></label>
+          <label>Notes<textarea id="connectionNotes" rows="2" placeholder="Rates, speciality, availability or other notes"></textarea></label>
+          <button class="primary" type="submit" id="connectionSaveBtn">Save connection</button>
+        </form>
+        <div id="connectionList" class="manager-list"></div>
+      </div>
+
+      <div class="profile-section-title">Data & app</div>
+      <div class="profile-list-card">
+        <button class="profile-row" type="button" onclick="showScreen('bin')">
+          <span class="profile-row-icon">♻️</span><div><b>Recycle Bin</b><small>Restore deleted orders</small></div><i>›</i>
+        </button>
+        <button class="profile-row" type="button" onclick="exportData()">
+          <span class="profile-row-icon">💾</span><div><b>Backup Data</b><small>Download orders and profile</small></div><i>›</i>
+        </button>
+        <button class="profile-row" type="button" onclick="resetDemoData()">
+          <span class="profile-row-icon">↻</span><div><b>Reset Demo Data</b><small>Load the 30 sample orders again</small></div><i>›</i>
+        </button>
+      </div>
+      <p class="profile-version">TaraLoom · Tailor Order Manager · v11</p>
+    </section>
+
+    <section id="bin" class="screen">
+      <div class="page-head"><div><p class="kicker">Safe delete</p><h1>Recycle Bin</h1></div><button class="soft-btn" onclick="showScreen('profile')">← Profile</button></div>
+      <p class="helper">Restore an order or remove it permanently.</p>
+      <div id="binList" class="list"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button data-nav="dashboard" onclick="showScreen('dashboard')"><span>⌂</span><small>Home</small></button>
+    <button data-nav="orders" onclick="showScreen('orders')"><span>☰</span><small>Orders</small></button>
+    <button data-nav="add" onclick="showScreen('add')" class="add-tab"><span>＋</span><small>Add</small></button>
+    <button data-nav="catalog" onclick="showScreen('catalog')"><span>▧</span><small>Catalog</small></button>
+    <button data-nav="profile" onclick="showScreen('profile')"><span>◉</span><small>Profile</small></button>
+  </nav>
+</div>
+
+<div id="drawModal" class="modal">
+  <div class="draw-card">
+    <div class="draw-top"><div><p class="kicker">Sketch</p><h2 id="drawTitle">Draw the design</h2></div><button onclick="closeDraw()">×</button></div>
+    <div class="draw-tools"><button id="penToolBtn" onclick="setTool('pen')">Pen</button><button id="eraserToolBtn" onclick="setTool('eraser')">Eraser</button><button onclick="undoSketch()">Undo</button><button onclick="redoSketch()">Redo</button><button onclick="clearCanvas()">Clear</button><label class="tool-label">Colour <input id="penColor" type="color" value="#2f6f65" /></label><label class="tool-label">Size <input id="penSize" type="range" min="2" max="16" value="4" /></label></div>
+    <canvas id="canvas" width="760" height="920"></canvas>
+    <button class="primary large-submit" onclick="saveSketch()">Save Sketch</button>
+  </div>
+</div>
+
+<div id="catalogModal" class="modal catalog-modal" onclick="catalogBackdropClose(event)">
+  <div class="catalog-add-card">
+    <div class="draw-top"><div><p class="kicker">Catalog</p><h2>Name this style</h2></div><button type="button" onclick="closeCatalogModal()">×</button></div>
+    <img id="catalogPreviewImage" class="catalog-preview-image" alt="Style preview" />
+    <label class="catalog-name-label">Style name<input id="catalogNameInput" maxlength="60" placeholder="e.g. Bridal blouse back" /></label>
+    <div class="catalog-modal-actions"><button type="button" onclick="closeCatalogModal()">Cancel</button><button type="button" class="primary" onclick="savePendingCatalogStyle()">Save Style</button></div>
+  </div>
+</div>
+
+<div id="imageModal" class="image-modal" onclick="imageBackdropClose(event)">
+  <button class="image-close" onclick="closeImageViewer()" aria-label="Close">×</button>
+  <div class="image-viewer-card">
+    <img id="imageViewer" alt="Full view" />
+    <div id="imageViewerTitle" class="image-viewer-title"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
