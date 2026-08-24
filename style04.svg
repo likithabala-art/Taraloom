@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="600" viewBox="0 0 360 600">
+<rect width="360" height="600" rx="28" fill="#e8e3f1"/>
+<circle cx="300" cy="62" r="34" fill="#ffffff" opacity=".35"/>
+<path d="M80 96 C110 82,130 74,150 70 C158 90,170 105,180 105 C190 105,202 90,210 70 C230 74,250 82,280 96 L296 165 L255 178 L238 145 L250 508 C220 546,140 546,110 508 L122 145 L105 178 L64 165 Z" fill="#fffdf9" stroke="#625a7a" stroke-width="5" stroke-linejoin="round"/>
+<path d="M145 78 C150 112,164 128,180 128 C196 128,210 112,215 78" fill="none" stroke="#625a7a" stroke-width="4"/>
+<path d="M112 230 C145 242,215 242,248 230" fill="none" stroke="#625a7a" stroke-width="3" stroke-dasharray="8 7" opacity=".7"/>
+<path d="M122 145 C155 164,205 164,238 145" fill="none" stroke="#625a7a" stroke-width="3" opacity=".55"/>
+<text x="24" y="572" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#625a7a">Gown Drape</text>
+</svg>
